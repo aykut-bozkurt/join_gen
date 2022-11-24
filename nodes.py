@@ -9,6 +9,8 @@ import random
 # 2. Tables has common dist col
 # 3. WHERE clause consists of 1 restriction e.g. WHERE dist1 (< | > | =) Const
 #
+# TODO: RTE_FUNCTION, RTE_TABLEFUNC, RTE_VALUES, SEMIJOIN, ANTIJOIN, ORDER BY, LIMIT 
+#
 # ====SYNTAX====
 # ===Nonterminals===
 #   Query
@@ -24,21 +26,27 @@ import random
 #   Using
 #   RestrictList
 #   Restrict
+#   CteRte
+#   CteList
+#   Cte
 #
 # ===Terminals===
 #   e 'SELECT' 'FROM' 'INNER JOIN' 'LEFT JOIN' 'RIGHT JOIN' 'FULL JOIN' 'WHERE' '*' ',' ';'
 #
 # ===Rules===
-# Start -> Query ';'
+# Start -> Query ';' || 'WITH' CteList Query ';'
 # Query -> SelectExpr FromExpr
 # SelectExpr -> 'SELECT' '*'
 # FromExpr -> 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName ('<' || '>' || '=') Int]
 # JoinList ->  JoinOp Rte Using JoinList || e
 # Using -> 'USING' '(' DistColName ')'
 # RteList -> Rte [, RteList] || Rte
-# Rte -> SubqueryRte as 'nextRandomAlias()' || RelationRte as 'nextRandomAlias()'
+# Rte -> SubqueryRte 'AS' 'nextRandomAlias()' || RelationRte 'AS' 'nextRandomAlias()' || CteRte
 # SubqueryRte -> '(' Query ')'
 # RelationRte -> 'nextRandomTableName()'
+# CteRte -> 'nextRandomCteName()'
+# CteList -> Cte [',' CteList] || Cte
+# Cte -> 'nextRandomAlias()' 'AS' '(' Query ')'
 # JoinOp -> 'INNER JOIN' || 'LEFT JOIN' || 'RIGHT JOIN' || 'FULL JOIN'
 # DistColName -> 'hardwired(get from config)'
 
@@ -62,24 +70,56 @@ def nextRandomRestrictOp():
 # each level's last table is used in WHERE clause for the level
 _aliasStack = []
 
-_current_rte_count = 0
+# we should not refer cte inside cte
+_insideCte = False
+
+_totalRteCount = 0
+_currentRteCount = 0
 def curAlias():
-    global _current_rte_count
-    return ' table_' + str(_current_rte_count) + ' '
+    global _totalRteCount
+    return ' table_' + str(_totalRteCount) + ' '
+
+_currentCteCount = 0
+_currentCteRteCount = 0
+def curCteAlias():
+    global _currentCteCount
+    return ' cte_' + str(_currentCteCount) + ' '
+
+def nextRandomCteName():
+    global _currentCteCount
+    randCteRef = random.randint(0, _currentCteCount-1)
+    return ' cte_' + str(randCteRef)
+
+def hasAnyCte():
+    return _currentCteCount > 0
 
 def canGenerateNewRte():
-    # we are guaranteed to generate 2 more rtes when we call here
-    return _current_rte_count < getTargetRteCount()
+    return _currentRteCount < getTargetRteCount()
+
+def canGenerateNewCte():
+    return _currentCteCount < getTargetCteCount()
+
+def canGenerateNewRteInsideCte():
+    return _currentCteRteCount < getTargetCteRteCount()
 
 def getQuery():
-    query = genQuery()
+    # Query ';' || 'WITH' CteList Query ';'
+    global _insideCte
+    query = ''
+    if random.randint(0,1):
+        query += genQuery()
+    else:
+        _insideCte = True
+        query += ' WITH '
+        query += genCteList()
+        _insideCte = False
+        query += genQuery()
     query += ';'
     return query
 
 def genQuery():
     # SelectExpr FromExpr
     query = ''
-
     query += genSelectExpr()
     query += genFromExpr()
     return query
@@ -112,12 +152,41 @@ def genFromExpr():
         query += str(random.randint(-1000, 1000))
     return query
 
+def genCteList():
+    # Cte [',' CteList] || Cte
+    query = ''
+
+    if random.randint(0,1):
+        query += genCte()
+        if not canGenerateNewCte():
+            return query
+        query += ','
+        query += genCteList()
+    else:
+        query += genCte()
+    return query
+
+def genCte():
+    # 'nextRandomAlias()' 'AS' '(' Query ')'
+    global _currentCteCount
+    query = ''
+    query += curCteAlias().strip()
+    _currentCteCount += 1
+    query += ' AS '
+    query += ' ( '
+    query += genQuery()
+    query += ' ) '
+    return query
+
 def genRteList():
     # RteList -> Rte [, RteList] || Rte
+    global _insideCte
     query = ''
     if random.randint(0,1):
         query += genRte()
         if not canGenerateNewRte():
+            return query
+        if _insideCte and not canGenerateNewRteInsideCte():
             return query
         query += ','
         query += genRteList()
@@ -132,6 +201,8 @@ def genJoinList():
     if random.randint(0,1):
         if not canGenerateNewRte():
             return query
+        if _insideCte and not canGenerateNewRteInsideCte():
+            return query
         query += nextRandomJoinOp()
         query += genRte()
         query += genUsing()
@@ -145,14 +216,26 @@ def genUsing():
     return query
 
 def genRte():
-    # SubqueryRte as 'nextRandomAlias()' || RelationRte as 'nextRandomAlias()'
-    global _current_rte_count
+    # SubqueryRte as 'nextRandomAlias()' || RelationRte as 'nextRandomAlias()' || CteRte
+    global _currentRteCount, _currentCteRteCount, _totalRteCount
     alias = curAlias().strip()
-    _current_rte_count += 1
+    if _insideCte:
+        _currentCteRteCount += 1
+    else:
+        _currentRteCount += 1
+    _totalRteCount += 1
     
     # donot dive into recursive subquery further if we hit into rte limit, replace it with relation rte
     rteType = nextRandomRteType()
     if not canGenerateNewRte():
+        rteType = RTEType.RELATION
+
+    # donot dive into recursive subquery further if we hit into rte in cte limit, replace it with relation rte
+    if _insideCte and not canGenerateNewRteInsideCte():
+        rteType = RTEType.RELATION
+
+    # we cannot refer to cte if we are inside it or we donot have any cte
+    if (_insideCte or not hasAnyCte()) and rteType == RTEType.CTE:
         rteType = RTEType.RELATION
 
     query = ''
@@ -160,6 +243,8 @@ def genRte():
         query += genSubqueryRte()
     elif rteType == RTEType.RELATION:
         query += genRelationRte()
+    elif rteType == RTEType.CTE:
+        query += genCteRte()
     else:
         raise BaseException("unknown RTE type")
 
@@ -181,4 +266,10 @@ def genRelationRte():
     # 'nextRandomTableName()'
     query = ''
     query += nextRandomRte()
+    return query
+
+def genCteRte():
+    # 'nextRandomCteName()'
+    query = ''
+    query += nextRandomCteName()
     return query
