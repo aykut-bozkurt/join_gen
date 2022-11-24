@@ -7,7 +7,7 @@ import random
 # ======Assumptions======
 # 1. Targetlist is firstable.*
 # 2. Tables has common dist col
-# 3. No WHERE clause
+# 3. WHERE clause consists of 1 restriction e.g. WHERE dist1 (< | > | =) Const
 #
 # ====SYNTAX====
 # ===Nonterminals===
@@ -22,15 +22,17 @@ import random
 #   JoinList
 #   JoinOp
 #   Using
+#   RestrictList
+#   Restrict
 #
 # ===Terminals===
-#   e 'SELECT' 'FROM' 'INNER JOIN' 'LEFT JOIN' 'RIGHT JOIN' 'FULL JOIN' '*' ',' ';'
+#   e 'SELECT' 'FROM' 'INNER JOIN' 'LEFT JOIN' 'RIGHT JOIN' 'FULL JOIN' 'WHERE' '*' ',' ';'
 #
 # ===Rules===
 # Start -> Query ';'
 # Query -> SelectExpr FromExpr
 # SelectExpr -> 'SELECT' '*'
-# FromExpr -> 'FROM' (Rte JoinList JoinOp Rte Using || RteList)
+# FromExpr -> 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName ('<' || '>' || '=') Int]
 # JoinList ->  JoinOp Rte Using JoinList || e
 # Using -> 'USING' '(' DistColName ')'
 # RteList -> Rte [, RteList] || Rte
@@ -39,7 +41,6 @@ import random
 # RelationRte -> 'nextRandomTableName()'
 # JoinOp -> 'INNER JOIN' || 'LEFT JOIN' || 'RIGHT JOIN' || 'FULL JOIN'
 # DistColName -> 'hardwired(get from config)'
-#
 
 def nextRandomRte():
     tables = getTargetTables()
@@ -52,7 +53,14 @@ def nextRandomRteType():
 def nextRandomJoinOp():
     # 'INNER JOIN' || 'LEFT JOIN' || 'RIGHT JOIN' || 'FULL JOIN'
     joinTypes = getTargetJoinTypes()
-    return random.choice(joinTypes).name + ' JOIN'
+    return ' ' + random.choice(joinTypes).name + ' JOIN'
+
+def nextRandomRestrictOp():
+    restrictOps = getTargetRestrictOps()
+    return ' ' + random.choice(restrictOps) + ' '
+
+# each level's last table is used in WHERE clause for the level
+_aliasStack = []
 
 _current_rte_count = 0
 def curAlias():
@@ -71,18 +79,19 @@ def getQuery():
 def genQuery():
     # SelectExpr FromExpr
     query = ''
+
     query += genSelectExpr()
     query += genFromExpr()
     return query
 
 def genSelectExpr():
-    # 'SELECT' '*'
+    # 'SELECT' 'nextRandomAlias()'
     query = ''
     query += ' SELECT ' + curAlias().strip() + '.* '
     return query
 
 def genFromExpr():
-    # 'FROM' Rte Rte JoinList JoinOp Rte Using
+    # 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName ('<' || '>' || '=') Int]
     query = ''
     query += ' FROM '
 
@@ -94,6 +103,13 @@ def genFromExpr():
         query += genUsing()
     else:
         query += genRteList()
+
+    alias = _aliasStack.pop()
+    if random.randint(0,1):
+        query += ' WHERE '
+        query += alias + '.' + getDistCol()
+        query += nextRandomRestrictOp()
+        query += str(random.randint(-1000, 1000))
     return query
 
 def genRteList():
@@ -130,8 +146,8 @@ def genUsing():
 
 def genRte():
     # SubqueryRte as 'nextRandomAlias()' || RelationRte as 'nextRandomAlias()'
-    global _current_rte_count 
-    alias = curAlias()
+    global _current_rte_count
+    alias = curAlias().strip()
     _current_rte_count += 1
     
     # donot dive into recursive subquery further if we hit into rte limit, replace it with relation rte
@@ -149,6 +165,7 @@ def genRte():
 
     query += ' AS '
     query += alias
+    _aliasStack.append(alias)
         
     return query
 

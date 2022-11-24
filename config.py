@@ -11,7 +11,8 @@ class RTEType(Enum):
     SUBQUERY = 2
 
 _target_join_types = [JoinType.INNER, JoinType.LEFT, JoinType.RIGHT, JoinType.FULL] 
-_target_rte_types = [RTEType.RELATION, RTEType.SUBQUERY] 
+_target_rte_types = [RTEType.RELATION, RTEType.SUBQUERY]
+_target_restrict_ops = ['<','>','=']
 _target_tables = ['ref1', 'dist1']
 _target_dist_col = 'id'
 _target_rte_count = 5
@@ -24,6 +25,9 @@ def getTargetRteTypes():
 
 def getTargetJoinTypes():
     return _target_join_types
+
+def getTargetRestrictOps():
+    return _target_restrict_ops
 
 def getTargetTables():
     return _target_tables
