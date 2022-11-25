@@ -1,4 +1,4 @@
-from config import *
+from config.config import *
 from node_defs import *
 
 import random
@@ -79,7 +79,7 @@ class GeneratorContext:
 
     def curCteAlias(self):
         '''returns current alias name to be used for the current cte'''
-        return ' cte_' + str(self.currentCteCount) + ' '
+        return ' cte_' + str(self.currentCteCount)
 
     def hasAnyCte(self):
         '''returns if context has any cte'''
@@ -105,9 +105,9 @@ class GeneratorContext:
 
 def newQuery():
     genCtx = GeneratorContext()
-    return _genQuery(genCtx)
+    return _start(genCtx)
 
-def _genQuery(genCtx):
+def _start(genCtx):
     '''returns generated query'''
     # Query ';' || 'WITH' CteList Query ';'
     query = ''
@@ -152,7 +152,7 @@ def _genFromExpr(genCtx):
     alias = genCtx.removeLastAlias()
     if random.randint(0,1):
         query += ' WHERE '
-        query += alias + '.' + getConfig().targetCol.name
+        query += alias + '.' + getConfig().targetCol
         query += randomRestrictOp()
         query += str(random.randint(-1000, 1000))
     return query
@@ -174,7 +174,7 @@ def _genCteList(genCtx):
 def _genCte(genCtx):
     # 'nextRandomAlias()' 'AS' '(' Query ')'
     query = ''
-    query += genCtx.curCteAlias().strip()
+    query += genCtx.curCteAlias()
     genCtx.currentCteCount += 1
     query += ' AS '
     query += ' ( '
@@ -215,7 +215,7 @@ def _genJoinList(genCtx):
 def _genUsing(genCtx):
     # 'USING' '(' DistColName ')'
     query = ''
-    query += ' USING (' + getConfig().targetCol.name + ' ) '
+    query += ' USING (' + getConfig().targetCol + ' ) '
     return query
 
 def _genRte(genCtx):

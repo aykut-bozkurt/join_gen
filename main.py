@@ -1,5 +1,5 @@
-from join_gen import *
-from ddl_gen import *
+from generator.join_gen import *
+from generator.ddl_gen import *
 
 import signal
 import sys

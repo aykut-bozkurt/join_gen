@@ -1,5 +1,5 @@
 from node_defs import *
-from config import *
+from config.config import *
 
 def tableDDLs():
     ddls = ''
@@ -22,7 +22,7 @@ def _tableDDL(table):
     ddl += ');\n'
     
     if table.citusType == CitusType.DISTRIBUTED:
-        ddl += 'SELECT create_distributed_table(' + '\'' + table.name + '\',\'' + table.distCol.name + '\'' + ');'
+        ddl += 'SELECT create_distributed_table(' + '\'' + table.name + '\',\'' + table.distCol + '\'' + ');'
     else:
         ddl += 'SELECT create_reference_table(' + '\'' + table.name + '\'' + ');'
     ddl += '\n'
@@ -32,5 +32,5 @@ def _columnDDL(column):
     ddl = ''
     ddl += column.name
     ddl += ' '
-    ddl += column.type.name
+    ddl += column.type
     return ddl

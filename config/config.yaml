@@ -1,0 +1,38 @@
+targetTables:
+  - Table:
+      name: dist
+      citusType: DISTRIBUTED
+      distCol: id
+      columns:
+        - Column: 
+          name: id
+          type: int
+  - Table:
+      name: ref
+      citusType: REFERENCE
+      distCol: id
+      columns:
+        - Column: 
+          name: id
+          type: int
+
+targetJoinTypes:
+  - INNER
+  - LEFT
+  - RIGHT
+  - FULL
+
+targetRteTypes:
+  - RELATION
+  - SUBQUERY
+  - CTE
+
+targetRestrictOps: 
+  - LT
+  - GT
+  - EQ
+
+targetRteCount: 5
+targetCteCount: 2
+targetCteRteCount: 3
+targetCol: id
