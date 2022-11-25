@@ -52,7 +52,7 @@ import random
 
 def nextRandomRte():
     tables = getTargetTables()
-    return ' ' + random.choice(tables) + ' '
+    return ' ' + random.choice(tables).name + ' '
 
 def nextRandomRteType():
     rtes = getTargetRteTypes()
@@ -67,52 +67,58 @@ def nextRandomRestrictOp():
     restrictOps = getTargetRestrictOps()
     return ' ' + random.choice(restrictOps) + ' '
 
-# each level's last table is used in WHERE clause for the level
-_aliasStack = []
+class GeneratorContext:
+    # each level's last table is used in WHERE clause for the level
+    aliasStack = []
+    # we should not refer cte inside cte
+    insideCte = False
+    # rte and cte count limits
+    totalRteCount = 0
+    currentRteCount = 0
+    currentCteCount = 0
+    currentCteRteCount = 0
+_generatorContext = None
 
-# we should not refer cte inside cte
-_insideCte = False
+def resetGeneratorContext():
+    global _generatorContext
+    _generatorContext = GeneratorContext()
 
-_totalRteCount = 0
-_currentRteCount = 0
 def curAlias():
-    global _totalRteCount
-    return ' table_' + str(_totalRteCount) + ' '
+    global _generatorContext
+    return ' table_' + str(_generatorContext.totalRteCount) + ' '
 
-_currentCteCount = 0
-_currentCteRteCount = 0
 def curCteAlias():
-    global _currentCteCount
-    return ' cte_' + str(_currentCteCount) + ' '
+    global _generatorContext
+    return ' cte_' + str(_generatorContext.currentCteCount) + ' '
 
 def nextRandomCteName():
-    global _currentCteCount
-    randCteRef = random.randint(0, _currentCteCount-1)
+    global _generatorContext
+    randCteRef = random.randint(0, _generatorContext.currentCteCount-1)
     return ' cte_' + str(randCteRef)
 
 def hasAnyCte():
-    return _currentCteCount > 0
+    return _generatorContext.currentCteCount > 0
 
 def canGenerateNewRte():
-    return _currentRteCount < getTargetRteCount()
+    return _generatorContext.currentRteCount < getTargetRteCount()
 
 def canGenerateNewCte():
-    return _currentCteCount < getTargetCteCount()
+    return _generatorContext.currentCteCount < getTargetCteCount()
 
 def canGenerateNewRteInsideCte():
-    return _currentCteRteCount < getTargetCteRteCount()
+    return _generatorContext.currentCteRteCount < getTargetCteRteCount()
 
 def getQuery():
     # Query ';' || 'WITH' CteList Query ';'
-    global _insideCte
+    global _generatorContext
     query = ''
     if random.randint(0,1):
         query += genQuery()
     else:
-        _insideCte = True
+        _generatorContext.insideCte = True
         query += ' WITH '
         query += genCteList()
-        _insideCte = False
+        _generatorContext.insideCte = False
         query += genQuery()
     query += ';'
     return query
@@ -144,7 +150,7 @@ def genFromExpr():
     else:
         query += genRteList()
 
-    alias = _aliasStack.pop()
+    alias = _generatorContext.aliasStack.pop()
     if random.randint(0,1):
         query += ' WHERE '
         query += alias + '.' + getDistCol()
@@ -168,10 +174,10 @@ def genCteList():
 
 def genCte():
     # 'nextRandomAlias()' 'AS' '(' Query ')'
-    global _currentCteCount
+    global _generatorContext
     query = ''
     query += curCteAlias().strip()
-    _currentCteCount += 1
+    _generatorContext.currentCteCount += 1
     query += ' AS '
     query += ' ( '
     query += genQuery()
@@ -180,13 +186,13 @@ def genCte():
 
 def genRteList():
     # RteList -> Rte [, RteList] || Rte
-    global _insideCte
+    global _generatorContext
     query = ''
     if random.randint(0,1):
         query += genRte()
         if not canGenerateNewRte():
             return query
-        if _insideCte and not canGenerateNewRteInsideCte():
+        if _generatorContext.insideCte and not canGenerateNewRteInsideCte():
             return query
         query += ','
         query += genRteList()
@@ -201,7 +207,7 @@ def genJoinList():
     if random.randint(0,1):
         if not canGenerateNewRte():
             return query
-        if _insideCte and not canGenerateNewRteInsideCte():
+        if _generatorContext.insideCte and not canGenerateNewRteInsideCte():
             return query
         query += nextRandomJoinOp()
         query += genRte()
@@ -217,13 +223,13 @@ def genUsing():
 
 def genRte():
     # SubqueryRte as 'nextRandomAlias()' || RelationRte as 'nextRandomAlias()' || CteRte
-    global _currentRteCount, _currentCteRteCount, _totalRteCount
+    global _generatorContext
     alias = curAlias().strip()
-    if _insideCte:
-        _currentCteRteCount += 1
+    if _generatorContext.insideCte:
+        _generatorContext.currentCteRteCount += 1
     else:
-        _currentRteCount += 1
-    _totalRteCount += 1
+        _generatorContext.currentRteCount += 1
+    _generatorContext.totalRteCount += 1
     
     # donot dive into recursive subquery further if we hit into rte limit, replace it with relation rte
     rteType = nextRandomRteType()
@@ -231,11 +237,11 @@ def genRte():
         rteType = RTEType.RELATION
 
     # donot dive into recursive subquery further if we hit into rte in cte limit, replace it with relation rte
-    if _insideCte and not canGenerateNewRteInsideCte():
+    if _generatorContext.insideCte and not canGenerateNewRteInsideCte():
         rteType = RTEType.RELATION
 
     # we cannot refer to cte if we are inside it or we donot have any cte
-    if (_insideCte or not hasAnyCte()) and rteType == RTEType.CTE:
+    if (_generatorContext.insideCte or not hasAnyCte()) and rteType == RTEType.CTE:
         rteType = RTEType.RELATION
 
     query = ''
@@ -250,7 +256,7 @@ def genRte():
 
     query += ' AS '
     query += alias
-    _aliasStack.append(alias)
+    _generatorContext.aliasStack.append(alias)
         
     return query
 
