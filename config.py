@@ -1,49 +1,6 @@
-from enum import Enum
+from node_defs import *
 
-class JoinType(Enum):
-    INNER = 1
-    LEFT = 2
-    RIGHT = 3
-    FULL = 4
-
-class RTEType(Enum):
-    RELATION = 1
-    SUBQUERY = 2
-    CTE = 3
-
-class ValueType(Enum):
-    INT = 1
-    TEXT = 2
-
-class CitusType(Enum):
-    DISTRIBUTED = 1
-    REFERENCE = 2
-
-class Pkey:
-    def __init__(self):
-        self.table = None
-        self.column = None
-
-class Fkey:
-    def __init__(self):
-        self.referencingTable = None
-        self.referencingColumn = None
-        self.referencedTable = None
-        self.referencedColumn = None
-
-class Table:
-    def __init__(self, name, citusType, distCol, columns, pkey, fkeys):
-        self.name = name
-        self.citusType = citusType
-        self.distCol = distCol
-        self.columns = columns
-        self.pkey = pkey
-        self.fkeys = fkeys
-
-class Column:
-    def __init__(self, name, type):
-        self.name = name
-        self.type = type
+import random
 
 def createTargetTables():
     col = Column('id', ValueType.INT)
@@ -52,14 +9,15 @@ def createTargetTables():
     return [distTable, refTable], col
 
 class Config:
-    targetJoinTypes = []
-    targetRteTypes = []
-    targetRestrictOps = []
-    targetTables = []
-    targetCol = None
-    targetRteCount = 0
-    targetCteCount = 0
-    targetCteRteCount = 0
+    def __init__(self):
+        self.targetJoinTypes = []
+        self.targetRteTypes = []
+        self.targetRestrictOps = []
+        self.targetTables = []
+        self.targetCol = None
+        self.targetRteCount = 0
+        self.targetCteCount = 0
+        self.targetCteRteCount = 0
 
 _config = None
 def resetConfig():
@@ -74,26 +32,25 @@ def resetConfig():
     config.targetCteRteCount = 3
     _config = config
 
-def getDistCol():
-    return _config.targetCol.name
+def getConfig():
+    return _config
 
-def getTargetRteTypes():
-    return _config.targetRteTypes
+def randomAvailableTableName():
+    '''returns a randomly selected table name from target tables given at config'''
+    tables = getConfig().targetTables
+    return ' ' + random.choice(tables).name + ' '
 
-def getTargetJoinTypes():
-    return _config.targetJoinTypes
+def randomRteType():
+    '''returns a randomly selected RteType given at config'''
+    rtes = getConfig().targetRteTypes
+    return random.choice(rtes)
 
-def getTargetRestrictOps():
-    return _config.targetRestrictOps
+def randomJoinOp():
+    '''returns a randomly selected JoinOp given at config'''
+    joinTypes = getConfig().targetJoinTypes
+    return ' ' + random.choice(joinTypes).name + ' JOIN'
 
-def getTargetTables():
-    return _config.targetTables
-
-def getTargetRteCount():
-    return _config.targetRteCount
-
-def getTargetCteCount():
-    return _config.targetCteCount
-
-def getTargetCteRteCount():
-    return _config.targetCteRteCount
+def randomRestrictOp():
+    '''returns a randomly selected RestrictOp given at config'''
+    restrictOps = getConfig().targetRestrictOps
+    return ' ' + random.choice(restrictOps) + ' '
