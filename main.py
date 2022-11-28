@@ -1,5 +1,6 @@
 from generator.join_gen import *
 from generator.ddl_gen import *
+from generator.data_gen import *
 
 import signal
 import sys
@@ -12,8 +13,15 @@ if __name__ == '__main__':
 
     resetConfig()
 
-    ddls = tableDDLs()
+    print('DDL generation started')
+    ddls = getTableDDLs()
     print(ddls)
+    print('DDL generation finished')
+
+    print('Data generation started')
+    data = getTableData()
+    print(data)
+    print('Data generation finished')
 
     while True:
         res = input('Press x to exit or Enter to generate more')

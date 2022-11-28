@@ -1,34 +1,33 @@
-from node_defs import *
 from config.config import *
 
-def tableDDLs():
+def getTableDDLs():
     ddls = ''
     tables = getConfig().targetTables
     for table in tables:
-        ddls += _tableDDL(table)
+        ddls += _genTableDDL(table)
         ddls += '\n'
     return ddls
 
-def _tableDDL(table):
+def _genTableDDL(table):
     ddl = ''
     ddl += 'CREATE TABLE ' + table.name + '('
 
     for column in table.columns[:-1]:
-        ddl += _columnDDL(column)
+        ddl += _genColumnDDL(column)
         ddl += ',\n'
     if len(table.columns) > 0:
-        ddl += _columnDDL(table.columns[-1])
+        ddl += _genColumnDDL(table.columns[-1])
 
     ddl += ');\n'
     
-    if table.citusType == CitusType.DISTRIBUTED:
+    if isTableDistributed(table):
         ddl += 'SELECT create_distributed_table(' + '\'' + table.name + '\',\'' + table.distCol + '\'' + ');'
     else:
         ddl += 'SELECT create_reference_table(' + '\'' + table.name + '\'' + ');'
     ddl += '\n'
     return ddl
         
-def _columnDDL(column):
+def _genColumnDDL(column):
     ddl = ''
     ddl += column.name
     ddl += ' '

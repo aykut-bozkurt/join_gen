@@ -4,6 +4,9 @@ targetTables:
       citusType: DISTRIBUTED
       distCol: id
       maxCount: 3
+      rowCount: 1000
+      nullRate: 0.1
+      duplicateRate: 0.1
       columns:
         - Column: 
           name: id
@@ -13,6 +16,9 @@ targetTables:
       citusType: REFERENCE
       distCol: id
       maxCount: 3
+      rowCount: 1000
+      nullRate: 0.1
+      duplicateRate: 0.1
       columns:
         - Column: 
           name: id
@@ -37,4 +43,4 @@ targetRestrictOps:
 targetRteCount: 5
 targetCteCount: 1
 targetCteRteCount: 3
-targetCol: id
+commonColName: id

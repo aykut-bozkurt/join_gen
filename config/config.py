@@ -11,7 +11,7 @@ class Config:
         self.targetJoinTypes = parseJoinTypeArray(configObj['targetJoinTypes'])
         self.targetRteTypes = parseRteTypeArray(configObj['targetRteTypes'])
         self.targetRestrictOps = parseRestrictOpArray(configObj['targetRestrictOps'])
-        self.targetCol = configObj['targetCol']
+        self.commonColName = configObj['commonColName']
         self.targetRteCount = configObj['targetRteCount']
         self.targetCteCount = configObj['targetCteCount']
         self.targetCteRteCount = configObj['targetCteRteCount']
@@ -65,3 +65,5 @@ def getMaxCountForTable(tableName):
     assert len(filtered) == 1
     return filtered[0].maxCount
 
+def isTableDistributed(table):
+    return table.citusType == CitusType.DISTRIBUTED

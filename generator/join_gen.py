@@ -186,7 +186,7 @@ def _genFromExpr(genCtx):
     alias = genCtx.removeLastAlias()
     if shouldSelectThatBranch():
         query += ' WHERE '
-        query += alias + '.' + getConfig().targetCol
+        query += alias + '.' + getConfig().commonColName
         query += randomRestrictOp()
         query += str(random.randint(-1000, 1000))
     return query
@@ -249,7 +249,7 @@ def _genJoinList(genCtx):
 def _genUsing(genCtx):
     # 'USING' '(' DistColName ')'
     query = ''
-    query += ' USING (' + getConfig().targetCol + ' ) '
+    query += ' USING (' + getConfig().commonColName + ' ) '
     return query
 
 def _genRte(genCtx):

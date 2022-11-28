@@ -35,11 +35,15 @@ def parseTable(targetTableDict):
         citusType = CitusType[targetTableDict['citusType']]
         distCol = targetTableDict['distCol']
         maxCount = targetTableDict['maxCount']
+        rowCount = targetTableDict['rowCount']
+        nullRate = targetTableDict['nullRate']
+        duplicateRate = targetTableDict['duplicateRate']
         columns = []
         for columnDict in targetTableDict['columns']:
             col = parseColumn(columnDict)
             columns.append(col)
-        return Table(name, citusType, distCol, maxCount, columns)
+        return Table(name, citusType, distCol, maxCount, rowCount,
+                     nullRate, duplicateRate, columns)
 
 def parseTableArray(targetTableDicts):
     tables = []
