@@ -1,7 +1,6 @@
 from node_defs import *
 from config.config_parser import *
 
-import random
 import yaml
 
 class Config:
@@ -53,33 +52,16 @@ def resetConfig():
 def getConfig():
     return _config
 
-def randomAvailableTableName():
-    '''returns a randomly selected table name from target tables given at config'''
+def getAllTableNames():
+    '''returns table names from target tables given at config'''
     tables = getConfig().targetTables
-    return ' ' + random.choice(tables).name + ' '
+    tableNames = [table.name for table in tables]
+    return tableNames
 
-def randomRteType():
-    '''returns a randomly selected RteType given at config'''
-    rtes = getConfig().targetRteTypes
-    return random.choice(rtes)
+def getMaxCountForTable(tableName):
+    tables = getConfig().targetTables
+    filtered = filter(lambda el: el.name == tableName, tables)
+    filtered = list(filtered)
+    assert len(filtered) == 1
+    return filtered[0].maxCount
 
-def randomJoinOp():
-    '''returns a randomly selected JoinOp given at config'''
-    joinTypes = getConfig().targetJoinTypes
-    return ' ' + random.choice(joinTypes).name + ' JOIN'
-
-def randomRestrictOp():
-    '''returns a randomly selected RestrictOp given at config'''
-    restrictOps = getConfig().targetRestrictOps
-    restrictOp = random.choice(restrictOps)
-    opText = ''
-    if restrictOp == RestrictOp.EQ:
-        opText = '='
-    elif restrictOp == RestrictOp.LT:
-        opText = '<'
-    elif restrictOp == RestrictOp.GT:
-        opText = '>'
-    else:
-        raise BaseException('Unknown restrict op')
-
-    return ' ' + opText + ' '

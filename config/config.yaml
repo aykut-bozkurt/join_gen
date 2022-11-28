@@ -3,6 +3,7 @@ targetTables:
       name: dist
       citusType: DISTRIBUTED
       distCol: id
+      maxCount: 3
       columns:
         - Column: 
           name: id
@@ -11,6 +12,7 @@ targetTables:
       name: ref
       citusType: REFERENCE
       distCol: id
+      maxCount: 3
       columns:
         - Column: 
           name: id
@@ -33,6 +35,6 @@ targetRestrictOps:
   - EQ
 
 targetRteCount: 5
-targetCteCount: 2
+targetCteCount: 1
 targetCteRteCount: 3
 targetCol: id

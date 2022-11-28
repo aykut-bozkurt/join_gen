@@ -1,5 +1,6 @@
 from config.config import *
 from node_defs import *
+from generator.random_selections import *
 
 import random
 
@@ -67,6 +68,10 @@ class GeneratorContext:
         self.currentCteCount = 0
         # rte count in cte part to enforce rte limit in cte
         self.currentCteRteCount = 0
+        # rte counts per table to enforce rte limit per table
+        self.perTableRtes = {}
+        # blacklisted table names to not randomly generate
+        self.tableBlacklist = set()
 
     def randomCteName(self):
         '''returns a randomly selected cte name'''
@@ -98,20 +103,49 @@ class GeneratorContext:
         return self.currentCteRteCount < getConfig().targetCteRteCount
 
     def addAlias(self, alias):
+        '''adds given alias to the stack'''
         self.aliasStack.append(alias)
 
     def removeLastAlias(self):
+        '''removes the latest added alias from the stack'''
         return self.aliasStack.pop()
 
+    def getRteNameEnforcingRteLimits(self):
+        '''returns rteName by enforcing rte count limits for tables'''
+        # do not enforce per table rte limit if we are inside cte
+        if self.insideCte:
+            rteName = random.choice(getAllTableNames())
+            return ' ' +  rteName + ' '
+
+        while True:
+            # keep trying to find random name by eliminating blacklist of names
+            allowedNames = set(getAllTableNames()) - self.tableBlacklist
+            assert len(allowedNames) > 0
+            rteName = random.choice(list(allowedNames))
+
+            # not yet added to rte count map, so we can allow the name
+            if rteName not in self.perTableRtes:
+                self.perTableRtes[rteName] = 0
+                break 
+            # limit is not exceeded, so we can allow the name
+            if self.perTableRtes[rteName] < getMaxCountForTable(rteName):
+                break
+            else:
+                self.tableBlacklist.add(rteName)
+
+        # increment rte count for the table name
+        self.perTableRtes[rteName] += 1
+        return ' ' +  rteName + ' '
+
 def newQuery():
+    '''returns generated query'''
     genCtx = GeneratorContext()
     return _start(genCtx)
 
 def _start(genCtx):
-    '''returns generated query'''
     # Query ';' || 'WITH' CteList Query ';'
     query = ''
-    if random.randint(0,1):
+    if not genCtx.canGenerateNewCte() or shouldSelectThatBranch():
         query += _genQuery(genCtx)
     else:
         genCtx.insideCte = True
@@ -140,7 +174,7 @@ def _genFromExpr(genCtx):
     query = ''
     query += ' FROM '
 
-    if random.randint(0,1):
+    if shouldSelectThatBranch():
         query += _genRte(genCtx)
         query += _genJoinList(genCtx)
         query += randomJoinOp()
@@ -150,7 +184,7 @@ def _genFromExpr(genCtx):
         query += _genRteList(genCtx)
 
     alias = genCtx.removeLastAlias()
-    if random.randint(0,1):
+    if shouldSelectThatBranch():
         query += ' WHERE '
         query += alias + '.' + getConfig().targetCol
         query += randomRestrictOp()
@@ -161,7 +195,7 @@ def _genCteList(genCtx):
     # Cte [',' CteList] || Cte
     query = ''
 
-    if random.randint(0,1):
+    if shouldSelectThatBranch():
         query += _genCte(genCtx)
         if not genCtx.canGenerateNewCte():
             return query
@@ -185,7 +219,7 @@ def _genCte(genCtx):
 def _genRteList(genCtx):
     # RteList -> Rte [, RteList] || Rte
     query = ''
-    if random.randint(0,1):
+    if shouldSelectThatBranch():
         query += _genRte(genCtx)
         if not genCtx.canGenerateNewRte():
             return query
@@ -201,7 +235,7 @@ def _genJoinList(genCtx):
     # JoinOp Rte Using JoinList || e
     query = ''
 
-    if random.randint(0,1):
+    if shouldSelectThatBranch():
         if not genCtx.canGenerateNewRte():
             return query
         if genCtx.insideCte and not genCtx.canGenerateNewRteInsideCte():
@@ -265,9 +299,9 @@ def _genSubqueryRte(genCtx):
     return query
 
 def _genRelationRte(genCtx):
-    # 'randomAvailableTableName()'
+    # 'randomAllowedTableName()'
     query = ''
-    query += randomAvailableTableName()
+    query += genCtx.getRteNameEnforcingRteLimits()
     return query
 
 def _genCteRte(genCtx):

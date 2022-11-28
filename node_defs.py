@@ -21,10 +21,11 @@ class CitusType(Enum):
     REFERENCE = 2
 
 class Table:
-    def __init__(self, name, citusType, distCol, columns):
+    def __init__(self, name, citusType, distCol, maxCount, columns):
         self.name = name
         self.citusType = citusType
         self.distCol = distCol
+        self.maxCount = maxCount
         self.columns = columns
 
 class Column:
