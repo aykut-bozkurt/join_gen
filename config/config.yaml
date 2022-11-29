@@ -34,11 +34,21 @@ targetRteTypes:
   - RELATION
   - SUBQUERY
   - CTE
+  #- TABLEFUNC
+  - VALUES
 
 targetRestrictOps: 
   - LT
   - GT
   - EQ
+
+targetAggregateFunctions:
+  - min
+  - max
+  - count
+
+targetRteTableFunctions:
+  - generate_series(0,100)
 
 targetRteCount: 5
 targetCteCount: 1

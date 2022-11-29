@@ -15,6 +15,8 @@ class Config:
         self.targetRteCount = configObj['targetRteCount']
         self.targetCteCount = configObj['targetCteCount']
         self.targetCteRteCount = configObj['targetCteRteCount']
+        self.targetAggregateFunctions = configObj['targetAggregateFunctions']
+        self.targetRteTableFunctions = configObj['targetRteTableFunctions']
         #print(self)
 
     def __repr__(self):

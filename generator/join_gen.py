@@ -11,7 +11,7 @@ import random
 # 2. Tables has common dist col
 # 3. WHERE clause consists of 1 restriction e.g. WHERE dist1 (< | > | =) Const
 #
-# TODO: RTE_FUNCTION, RTE_TABLEFUNC, RTE_VALUES, SEMIJOIN, ANTIJOIN, ORDER BY, LIMIT 
+# TODO: RTE_FUNCTION, RTE_TABLEFUNC, SEMIJOIN, ANTIJOIN
 #
 # ====SYNTAX====
 # ===Nonterminals===
@@ -31,25 +31,34 @@ import random
 #   CteRte
 #   CteList
 #   Cte
+#   ValuesRte
+#   Limit
+#   OrderBy
 #
 # ===Terminals===
 #   e 'SELECT' 'FROM' 'INNER JOIN' 'LEFT JOIN' 'RIGHT JOIN' 'FULL JOIN' 'WHERE' '*' ',' ';'
 #
 # ===Rules===
 # Start -> Query ';' || 'WITH' CteList Query ';'
-# Query -> SelectExpr FromExpr
-# SelectExpr -> 'SELECT' '*'
+# Query -> SelectExpr FromExpr [OrderBy] [Limit]
+# SelectExpr -> 'SELECT' 'curAlias()' '.' (DistColName || '*')
 # FromExpr -> 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName ('<' || '>' || '=') Int]
 # JoinList ->  JoinOp Rte Using JoinList || e
 # Using -> 'USING' '(' DistColName ')'
 # RteList -> Rte [, RteList] || Rte
-# Rte -> SubqueryRte 'AS' 'nextRandomAlias()' || RelationRte 'AS' 'nextRandomAlias()' || CteRte
+# Rte -> SubqueryRte 'AS' 'nextRandomAlias()' || RelationRte 'AS' 'nextRandomAlias()' ||
+#        CteRte 'AS' 'nextRandomAlias()' || TableFuncRte 'AS' 'nextRandomAlias()' ||
+#        ValuesRte 'AS' 'nextRandomAlias()'
 # SubqueryRte -> '(' Query ')'
 # RelationRte -> 'nextRandomTableName()'
 # CteRte -> 'randomCteName()'
 # CteList -> Cte [',' CteList] || Cte
 # Cte -> 'nextRandomAlias()' 'AS' '(' Query ')'
+# ValuesRte -> '(' 'VALUES' '(' 'random(-1000,1000)' ')' ')'
+# TableFuncRte -> 'randomTableFuncName()'
 # JoinOp -> 'INNER JOIN' || 'LEFT JOIN' || 'RIGHT JOIN' || 'FULL JOIN'
+# Limit -> 'LIMIT' 'random(0,1000)'
+# OrderBy -> 'ORDER BY' DistColName
 # DistColName -> 'hardwired(get from config)'
 
 class GeneratorContext:
@@ -157,16 +166,39 @@ def _start(genCtx):
     return query
 
 def _genQuery(genCtx):
-    # SelectExpr FromExpr
+    # SelectExpr FromExpr [OrderBy] [Limit]
     query = ''
     query += _genSelectExpr(genCtx)
     query += _genFromExpr(genCtx)
+    if shouldSelectThatBranch():
+        query += _genOrderBy(genCtx)
+    if shouldSelectThatBranch():
+        query += _genLimit(genCtx)
+    return query
+
+def _genOrderBy(genCtx):
+    # 'ORDER BY' DistColName
+    query = ''
+    query += ' ORDER BY '
+    query += getConfig().commonColName + ' '
+    return query
+
+def _genLimit(genCtx):
+    # 'LIMIT' 'random(1,1000)'
+    query = ''
+    query += ' LIMIT '
+    query += str(random.randint(1,1000))
     return query
 
 def _genSelectExpr(genCtx):
-    # 'SELECT' 'curAlias()'
+    # 'SELECT' 'curAlias()' '.' (DistColName || '*')
     query = ''
-    query += ' SELECT ' + genCtx.curAlias() + '.* '
+    query += ' SELECT '
+    commonColName = getConfig().commonColName
+    if shouldSelectThatBranch():
+        query +=  genCtx.curAlias() + '.' + commonColName + ' '
+    else:
+        query += randomAggregateFunc() + '(' + genCtx.curAlias() + '.' + commonColName + ') AS ' + commonColName + ' '
     return query
 
 def _genFromExpr(genCtx):
@@ -253,8 +285,11 @@ def _genUsing(genCtx):
     return query
 
 def _genRte(genCtx):
-    # SubqueryRte as 'nextRandomAlias()' || RelationRte as 'curAlias()' || CteRte
+    # SubqueryRte as 'nextRandomAlias()' || RelationRte as 'curAlias()' ||
+    # CteRte as 'curAlias()' || TableFuncRte as 'curAlias()' || ValuesRte 'AS' 'nextRandomAlias()'
     alias = genCtx.curAlias()
+    modifiedAlias = None
+
     if genCtx.insideCte:
         genCtx.currentCteRteCount += 1
     else:
@@ -281,11 +316,16 @@ def _genRte(genCtx):
         query += _genRelationRte(genCtx)
     elif rteType == RTEType.CTE:
         query += _genCteRte(genCtx)
+    elif rteType == RTEType.TABLEFUNC:
+        query += _genTableFuncRte(genCtx)
+    elif rteType == RTEType.VALUES:
+        query += _genValuesRte(genCtx)
+        modifiedAlias = alias + '(' + getConfig().commonColName + ') '
     else:
         raise BaseException("unknown RTE type")
 
     query += ' AS '
-    query += alias
+    query += (alias if not modifiedAlias else modifiedAlias)
     genCtx.addAlias(alias)
         
     return query
@@ -308,4 +348,16 @@ def _genCteRte(genCtx):
     # 'randomCteName()'
     query = ''
     query += genCtx.randomCteName()
+    return query
+
+def _genTableFuncRte(genCtx):
+    # 'randomTableFuncName()'
+    query = ''
+    query += randomTableFunc()
+    return query
+
+def _genValuesRte(genCtx):
+    # '( VALUES(random(-1000,1000)) )'
+    query = ''
+    query += ' ( VALUES(' + str(random.randint(-1000,1000)) + ' ) ) '
     return query

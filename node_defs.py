@@ -10,6 +10,8 @@ class RTEType(Enum):
     RELATION = 1
     SUBQUERY = 2
     CTE = 3
+    TABLEFUNC = 4
+    VALUES = 5
 
 class RestrictOp(Enum):
     LT = 1
