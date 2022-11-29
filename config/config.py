@@ -17,6 +17,10 @@ class Config:
         self.targetCteRteCount = configObj['targetCteRteCount']
         self.targetAggregateFunctions = configObj['targetAggregateFunctions']
         self.targetRteTableFunctions = configObj['targetRteTableFunctions']
+        self.semiAntiJoin = configObj['semiAntiJoin']
+        self.limit = configObj['limit']
+        self.orderby = configObj['orderby']
+        self.aggregate = configObj['aggregate']
         #print(self)
 
     def __repr__(self):

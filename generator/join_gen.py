@@ -7,18 +7,17 @@ import random
 # grammar syntax
 # 
 # ======Assumptions======
-# 1. Targetlist is firstable.*
-# 2. Tables has common dist col
-# 3. WHERE clause consists of 1 restriction e.g. WHERE dist1 (< | > | =) Const
+# 1. Tables has common dist col
+# 2. All operations execute on common column for all tables.
 #
-# TODO: RTE_FUNCTION, RTE_TABLEFUNC, SEMIJOIN, ANTIJOIN
+# TODO: RTE_FUNCTION, RTE_TABLEFUNC
 #
 # ====SYNTAX====
 # ===Nonterminals===
 #   Query
 #   SelectExpr
 #   FromExpr
-#   FromWithJoin
+#   RestrictExpr
 #   RteList
 #   Rte
 #   SubqueryRte
@@ -42,7 +41,8 @@ import random
 # Start -> Query ';' || 'WITH' CteList Query ';'
 # Query -> SelectExpr FromExpr [OrderBy] [Limit]
 # SelectExpr -> 'SELECT' 'curAlias()' '.' (DistColName || '*')
-# FromExpr -> 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName ('<' || '>' || '=') Int]
+# FromExpr -> 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName RestrictExpr]
+# RestrictExpr -> ('<' || '>' || '=') Int || ['NOT'] 'IN' SubqueryRte
 # JoinList ->  JoinOp Rte Using JoinList || e
 # Using -> 'USING' '(' DistColName ')'
 # RteList -> Rte [, RteList] || Rte
@@ -170,9 +170,9 @@ def _genQuery(genCtx):
     query = ''
     query += _genSelectExpr(genCtx)
     query += _genFromExpr(genCtx)
-    if shouldSelectThatBranch():
+    if getConfig().orderby and shouldSelectThatBranch():
         query += _genOrderBy(genCtx)
-    if shouldSelectThatBranch():
+    if getConfig().limit and shouldSelectThatBranch():
         query += _genLimit(genCtx)
     return query
 
@@ -195,14 +195,14 @@ def _genSelectExpr(genCtx):
     query = ''
     query += ' SELECT '
     commonColName = getConfig().commonColName
-    if shouldSelectThatBranch():
+    if not getConfig().aggregate or shouldSelectThatBranch():
         query +=  genCtx.curAlias() + '.' + commonColName + ' '
     else:
         query += randomAggregateFunc() + '(' + genCtx.curAlias() + '.' + commonColName + ') AS ' + commonColName + ' '
     return query
 
 def _genFromExpr(genCtx):
-    # 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName ('<' || '>' || '=') Int]
+    # 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName RestrictExpr]
     query = ''
     query += ' FROM '
 
@@ -219,8 +219,20 @@ def _genFromExpr(genCtx):
     if shouldSelectThatBranch():
         query += ' WHERE '
         query += alias + '.' + getConfig().commonColName
+        query += _genRestrictExpr(genCtx)
+    return query
+
+def _genRestrictExpr(genCtx):
+    # ('<' || '>' || '=') Int || ['NOT'] 'IN' '(' SubqueryRte ')'
+    query = ''
+    if not getConfig().semiAntiJoin or not genCtx.canGenerateNewRte() or shouldSelectThatBranch():
         query += randomRestrictOp()
         query += str(random.randint(-1000, 1000))
+    else:
+        if shouldSelectThatBranch():
+            query += ' NOT'
+        query += ' IN '
+        query += _genSubqueryRte(genCtx)
     return query
 
 def _genCteList(genCtx):
