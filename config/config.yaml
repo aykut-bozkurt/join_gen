@@ -5,7 +5,15 @@ semiAntiJoin: true
 limit: true
 orderby: true
 aggregate: true
-
+dataRange:
+  from: 0
+  to: 1000
+filterRange:
+  from: 0
+  to: 1000
+limitRange:
+  from: 0
+  to: 100
 targetRteCount: 5
 targetCteCount: 1
 targetCteRteCount: 3

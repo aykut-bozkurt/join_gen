@@ -24,6 +24,9 @@ class Config:
         self.interactiveMode = configObj['interactiveMode']
         self.outFile = configObj['outFile']
         self.queryCount = configObj['queryCount']
+        self.dataRange = parseRange(configObj['dataRange'])
+        self.filterRange = parseRange(configObj['filterRange'])
+        self.limitRange = parseRange(configObj['limitRange'])
         #print(self)
 
     def __repr__(self):

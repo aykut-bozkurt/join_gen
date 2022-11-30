@@ -55,10 +55,10 @@ import random
 # CteRte -> 'randomCteName()'
 # CteList -> Cte [',' CteList] || Cte
 # Cte -> 'nextRandomAlias()' 'AS' '(' Query ')'
-# ValuesRte -> '(' 'VALUES' '(' 'random(-1000,1000)' ')' ')'
+# ValuesRte -> '(' 'VALUES' '(' 'random()' ')' ')'
 # TableFuncRte -> 'randomTableFuncName()'
 # JoinOp -> 'INNER JOIN' || 'LEFT JOIN' || 'RIGHT JOIN' || 'FULL JOIN'
-# Limit -> 'LIMIT' 'random(0,1000)'
+# Limit -> 'LIMIT' 'random()'
 # OrderBy -> 'ORDER BY' DistColName
 # DistColName -> 'hardwired(get from config)'
 
@@ -185,10 +185,11 @@ def _genOrderBy(genCtx):
     return query
 
 def _genLimit(genCtx):
-    # 'LIMIT' 'random(1,1000)'
+    # 'LIMIT' 'random()'
     query = ''
     query += ' LIMIT '
-    query += str(random.randint(1,1000))
+    (fromVal, toVal) = getConfig().limitRange
+    query += str(random.randint(fromVal, toVal))
     return query
 
 def _genSelectExpr(genCtx):
@@ -228,7 +229,8 @@ def _genRestrictExpr(genCtx):
     query = ''
     if not getConfig().semiAntiJoin or not genCtx.canGenerateNewRte() or shouldSelectThatBranch():
         query += randomRestrictOp()
-        query += str(random.randint(-1000, 1000))
+        (fromVal, toVal) = getConfig().filterRange
+        query += str(random.randint(fromVal, toVal))
     else:
         if shouldSelectThatBranch():
             query += ' NOT'
@@ -370,7 +372,8 @@ def _genTableFuncRte(genCtx):
     return query
 
 def _genValuesRte(genCtx):
-    # '( VALUES(random(-1000,1000)) )'
+    # '( VALUES(random()) )'
     query = ''
-    query += ' ( VALUES(' + str(random.randint(-1000,1000)) + ' ) ) '
+    (fromVal, toVal) = getConfig().dataRange
+    query += ' ( VALUES(' + str(random.randint(fromVal,toVal)) + ' ) ) '
     return query

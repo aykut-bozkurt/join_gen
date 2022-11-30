@@ -56,3 +56,8 @@ def parseColumn(targetColumnDict):
     name = targetColumnDict['name']
     type = targetColumnDict['type']
     return Column(name, type)
+
+def parseRange(rangeDict):
+    fromVal = rangeDict['from']
+    toVal = rangeDict['to']
+    return (fromVal, toVal)
