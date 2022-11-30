@@ -10,8 +10,10 @@ def getTableDDLs():
 
 def _genTableDDL(table):
     ddl = ''
-    ddl += 'CREATE TABLE ' + table.name + '('
+    ddl += 'DROP TABLE IF EXISTS ' + table.name + ';'
+    ddl += '\n'
 
+    ddl += 'CREATE TABLE ' + table.name + '('
     for column in table.columns[:-1]:
         ddl += _genColumnDDL(column)
         ddl += ',\n'
