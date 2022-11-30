@@ -33,6 +33,7 @@ targetTables:
         - Column: 
           name: id
           type: int
+      dupCount: 2
   - Table:
       name: ref
       citusType: REFERENCE
@@ -45,6 +46,7 @@ targetTables:
         - Column: 
           name: id
           type: int
+      dupCount: 2
 
 targetJoinTypes:
   - INNER

@@ -24,7 +24,7 @@ class CitusType(Enum):
 
 class Table:
     def __init__(self, name, citusType, distCol, maxCount, 
-                 rowCount, nullRate, duplicateRate, columns):
+                 rowCount, nullRate, duplicateRate, columns, dupCount):
         self.name = name
         self.citusType = citusType
         self.distCol = distCol
@@ -33,6 +33,7 @@ class Table:
         self.nullRate =  nullRate
         self.duplicateRate =  duplicateRate
         self.columns = columns
+        self.dupCount = dupCount
 
 class Column:
     def __init__(self, name, type):

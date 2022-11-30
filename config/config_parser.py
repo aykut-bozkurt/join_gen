@@ -42,8 +42,9 @@ def parseTable(targetTableDict):
         for columnDict in targetTableDict['columns']:
             col = parseColumn(columnDict)
             columns.append(col)
+        dupCount = targetTableDict['dupCount']
         return Table(name, citusType, distCol, maxCount, rowCount,
-                     nullRate, duplicateRate, columns)
+                     nullRate, duplicateRate, columns, dupCount)
 
 def parseTableArray(targetTableDicts):
     tables = []

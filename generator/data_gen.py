@@ -11,9 +11,10 @@ def getTableData():
         dataGenerationSql += '\n'
 
         # generate null rows
-        targetNullRows = int(table.rowCount * table.nullRate)
-        dataGenerationSql += _genNullData(table.name, targetNullRows)
-        dataGenerationSql += '\n'
+        if not table.citusType == CitusType.DISTRIBUTED:
+            targetNullRows = int(table.rowCount * table.nullRate)
+            dataGenerationSql += _genNullData(table.name, targetNullRows)
+            dataGenerationSql += '\n'
 
         # generate duplicate rows
         targetDuplicateRows = int(table.rowCount * table.duplicateRate)

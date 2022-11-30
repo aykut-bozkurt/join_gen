@@ -2,12 +2,13 @@ from node_defs import *
 from config.config_parser import *
 
 import yaml
+import copy
 
 class Config:
     def __init__(self):
         configObj = Config.parseConfigFile('config/config.yaml')
 
-        self.targetTables = parseTableArray(configObj['targetTables'])
+        self.targetTables = _dupTables(parseTableArray(configObj['targetTables']))
         self.targetJoinTypes = parseJoinTypeArray(configObj['targetJoinTypes'])
         self.targetRteTypes = parseRteTypeArray(configObj['targetRteTypes'])
         self.targetRestrictOps = parseRestrictOpArray(configObj['targetRestrictOps'])
@@ -79,3 +80,15 @@ def getMaxCountForTable(tableName):
 
 def isTableDistributed(table):
     return table.citusType == CitusType.DISTRIBUTED
+
+def _dupTables(tables):
+    dupTables = []
+    for table in tables:
+        dupCount = table.dupCount
+        for dupIdx in range(1, dupCount):
+            dupTable = copy.deepcopy(table)
+            dupTable.name += str(dupIdx)
+            dupTables.append(dupTable)
+        table.name += '0'
+    tables.extend(dupTables)
+    return tables
