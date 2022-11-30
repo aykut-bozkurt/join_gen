@@ -4,7 +4,8 @@ outFile: queries.sql
 semiAntiJoin: true
 limit: true
 orderby: true
-aggregate: true
+aggregate: false
+useAvgAtTopLevelTarget: true
 dataRange:
   from: 0
   to: 1000

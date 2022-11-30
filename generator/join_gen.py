@@ -40,8 +40,8 @@ import random
 #
 # ===Rules===
 # Start -> Query ';' || 'WITH' CteList Query ';'
-# Query -> SelectExpr FromExpr [OrderBy] [Limit]
-# SelectExpr -> 'SELECT' 'curAlias()' '.' (DistColName || '*')
+# Query -> SelectExpr FromExpr [OrderBy] [Limit] || 'SELECT' 'avg(avgsub.DistColName)' 'FROM' SubqueryRte 'AS avgsub'
+# SelectExpr -> 'SELECT' 'curAlias()' '.' DistColName || 'randomAggregateFunc()' '(' curAlias() '.' DistColName ') AS ' DistColName
 # FromExpr -> 'FROM' (Rte JoinList JoinOp Rte Using || RteList) ['WHERE' 'nextRandomAlias()' '.' DistColName RestrictExpr]
 # RestrictExpr -> ('<' || '>' || '=') Int || ['NOT'] 'IN' SubqueryRte
 # JoinList ->  JoinOp Rte Using JoinList || e
@@ -82,6 +82,8 @@ class GeneratorContext:
         self.perTableRtes = {}
         # blacklisted table names to not randomly generate
         self.tableBlacklist = set()
+        # useful to track usage avg only at first select
+        self.usedAvg = False
 
     def randomCteName(self):
         '''returns a randomly selected cte name'''
@@ -167,14 +169,21 @@ def _start(genCtx):
     return query
 
 def _genQuery(genCtx):
-    # SelectExpr FromExpr [OrderBy] [Limit]
+    # SelectExpr FromExpr [OrderBy] [Limit] || 'SELECT' 'avg(avgsub.DistColName)' 'FROM' SubqueryRte 'AS avgsub'
     query = ''
-    query += _genSelectExpr(genCtx)
-    query += _genFromExpr(genCtx)
-    if getConfig().orderby and shouldSelectThatBranch():
-        query += _genOrderBy(genCtx)
-    if getConfig().limit and shouldSelectThatBranch():
-        query += _genLimit(genCtx)
+    if getConfig().useAvgAtTopLevelTarget and not genCtx.insideCte and not genCtx.usedAvg:
+        genCtx.usedAvg = True
+        query += 'SELECT '
+        query += 'avg(avgsub.' + getConfig().commonColName + ') FROM '
+        query += _genSubqueryRte(genCtx)
+        query += ' AS avgsub'
+    else:
+        query += _genSelectExpr(genCtx)
+        query += _genFromExpr(genCtx)
+        if getConfig().orderby and shouldSelectThatBranch():
+            query += _genOrderBy(genCtx)
+        if getConfig().limit and shouldSelectThatBranch():
+            query += _genLimit(genCtx)
     return query
 
 def _genOrderBy(genCtx):
@@ -193,7 +202,7 @@ def _genLimit(genCtx):
     return query
 
 def _genSelectExpr(genCtx):
-    # 'SELECT' 'curAlias()' '.' (DistColName || '*')
+    # 'SELECT' 'curAlias()' '.' DistColName || 'randomAggregateFunc()' '(' curAlias() '.' DistColName ') AS ' DistColName
     query = ''
     query += ' SELECT '
     commonColName = getConfig().commonColName

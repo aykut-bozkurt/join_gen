@@ -22,6 +22,7 @@ class Config:
         self.limit = configObj['limit']
         self.orderby = configObj['orderby']
         self.aggregate = configObj['aggregate']
+        self.useAvgAtTopLevelTarget = configObj['useAvgAtTopLevelTarget']
         self.interactiveMode = configObj['interactiveMode']
         self.outFile = configObj['outFile']
         self.queryCount = configObj['queryCount']
