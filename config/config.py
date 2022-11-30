@@ -21,6 +21,9 @@ class Config:
         self.limit = configObj['limit']
         self.orderby = configObj['orderby']
         self.aggregate = configObj['aggregate']
+        self.interactiveMode = configObj['interactiveMode']
+        self.outFile = configObj['outFile']
+        self.queryCount = configObj['queryCount']
         #print(self)
 
     def __repr__(self):

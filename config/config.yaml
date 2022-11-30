@@ -1,3 +1,17 @@
+interactiveMode: false
+queryCount: 10
+outFile: queries.sql
+semiAntiJoin: true
+limit: true
+orderby: true
+aggregate: true
+
+targetRteCount: 5
+targetCteCount: 1
+targetCteRteCount: 3
+
+commonColName: id
+
 targetTables:
   - Table:
       name: dist
@@ -49,12 +63,3 @@ targetAggregateFunctions:
 
 targetRteTableFunctions:
   - generate_series(0,100)
-
-semiAntiJoin: true
-limit: true
-orderby: true
-aggregate: true
-targetRteCount: 5
-targetCteCount: 1
-targetCteRteCount: 3
-commonColName: id

@@ -1,6 +1,7 @@
 from generator.join_gen import *
 from generator.ddl_gen import *
 from generator.data_gen import *
+from config.config import *
 
 import signal
 import sys
@@ -8,20 +9,9 @@ import sys
 def _signal_handler(sig, frame):
     sys.exit(0)
 
-if __name__ == '__main__':
-    signal.signal(signal.SIGINT, _signal_handler)
-
-    resetConfig()
-
-    print('DDL generation started')
-    ddls = getTableDDLs()
+def _interactiveMode(ddls, data):
     print(ddls)
-    print('DDL generation finished')
-
-    print('Data generation started')
-    data = getTableData()
     print(data)
-    print('Data generation finished')
 
     while True:
         res = input('Press x to exit or Enter to generate more')
@@ -33,3 +23,27 @@ if __name__ == '__main__':
         print(query)
 
         resetConfig()
+
+def _fileMode(ddls, data):
+    queryCount = getConfig().queryCount
+    fileName = getConfig().outFile
+    with open(fileName, 'w') as f:
+        queryLines = [ddls, data]
+        for _ in range(queryCount):
+            query = newQuery()
+            queryLine = query + '\n\n'
+            queryLines.append(queryLine)
+        f.writelines(queryLines)
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGINT, _signal_handler)
+
+    resetConfig()
+
+    ddls = getTableDDLs()
+    data = getTableData()
+
+    if getConfig().interactiveMode:
+        _interactiveMode(ddls, data)
+    else:
+        _fileMode(ddls, data)

@@ -35,7 +35,8 @@ import random
 #   OrderBy
 #
 # ===Terminals===
-#   e 'SELECT' 'FROM' 'INNER JOIN' 'LEFT JOIN' 'RIGHT JOIN' 'FULL JOIN' 'WHERE' '*' ',' ';'
+#   e 'SELECT' 'FROM' 'INNER JOIN' 'LEFT JOIN' 'RIGHT JOIN' 'FULL JOIN' 'WHERE' 'LIMIT' 'USING' 'WITH'
+#     'ORDER BY' 'VALUES' 'IN' 'NOT' 'AS' '<' '>' '=' '*' ',' ';' '(' ')'
 #
 # ===Rules===
 # Start -> Query ';' || 'WITH' CteList Query ';'
