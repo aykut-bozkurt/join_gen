@@ -25,10 +25,14 @@ def _interactiveMode(ddls, data):
         resetConfig()
 
 def _fileMode(ddls, data):
+    ddlFileName = getConfig().ddlOutFile
+    with open(ddlFileName, 'w') as ddlFile:
+        ddlFile.writelines([ddls, data])
+
     queryCount = getConfig().queryCount
-    fileName = getConfig().outFile
+    fileName = getConfig().queryOutFile
     with open(fileName, 'w') as f:
-        queryLines = [ddls, data]
+        queryLines = []
         for _ in range(queryCount):
             query = newQuery()
             queryLine = query + '\n\n'

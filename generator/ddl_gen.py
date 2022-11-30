@@ -17,14 +17,14 @@ def _genTableDDL(table):
         ddl += ',\n'
     if len(table.columns) > 0:
         ddl += _genColumnDDL(table.columns[-1])
-
     ddl += ');\n'
     
     if isTableDistributed(table):
         ddl += 'SELECT create_distributed_table(' + '\'' + table.name + '\',\'' + table.distCol + '\'' + ');'
-    else:
+        ddl += '\n'
+    elif isTableReference(table):
         ddl += 'SELECT create_reference_table(' + '\'' + table.name + '\'' + ');'
-    ddl += '\n'
+        ddl += '\n'
     return ddl
         
 def _genColumnDDL(column):

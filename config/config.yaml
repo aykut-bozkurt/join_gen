@@ -1,6 +1,7 @@
 interactiveMode: false
 queryCount: 10
-outFile: queries.sql
+queryOutFile: queries.sql
+ddlOutFile: ddls.sql
 semiAntiJoin: true
 limit: true
 orderby: true

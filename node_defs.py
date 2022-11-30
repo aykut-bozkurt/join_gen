@@ -21,6 +21,7 @@ class RestrictOp(Enum):
 class CitusType(Enum):
     DISTRIBUTED = 1
     REFERENCE = 2
+    POSTGRES = 3
 
 class Table:
     def __init__(self, name, citusType, distCol, maxCount, 

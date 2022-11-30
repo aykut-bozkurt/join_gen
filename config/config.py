@@ -24,7 +24,8 @@ class Config:
         self.aggregate = configObj['aggregate']
         self.useAvgAtTopLevelTarget = configObj['useAvgAtTopLevelTarget']
         self.interactiveMode = configObj['interactiveMode']
-        self.outFile = configObj['outFile']
+        self.queryOutFile = configObj['queryOutFile']
+        self.ddlOutFile = configObj['ddlOutFile']
         self.queryCount = configObj['queryCount']
         self.dataRange = parseRange(configObj['dataRange'])
         self.filterRange = parseRange(configObj['filterRange'])
@@ -81,6 +82,9 @@ def getMaxCountForTable(tableName):
 
 def isTableDistributed(table):
     return table.citusType == CitusType.DISTRIBUTED
+
+def isTableReference(table):
+    return table.citusType == CitusType.REFERENCE
 
 def _dupTables(tables):
     dupTables = []
