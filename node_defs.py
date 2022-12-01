@@ -24,11 +24,10 @@ class CitusType(Enum):
     POSTGRES = 3
 
 class Table:
-    def __init__(self, name, citusType, distCol, maxCount, 
+    def __init__(self, name, citusType, maxCount, 
                  rowCount, nullRate, duplicateRate, columns, dupCount):
         self.name = name
         self.citusType = citusType
-        self.distCol = distCol
         self.maxCount = maxCount
         self.rowCount =  rowCount
         self.nullRate =  nullRate

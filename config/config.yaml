@@ -26,7 +26,6 @@ targetTables:
   - Table:
       name: dist
       citusType: DISTRIBUTED
-      distCol: id
       maxCount: 3
       rowCount: 1000
       nullRate: 0.1
@@ -39,7 +38,6 @@ targetTables:
   - Table:
       name: ref
       citusType: REFERENCE
-      distCol: id
       maxCount: 3
       rowCount: 1000
       nullRate: 0.1

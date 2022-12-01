@@ -33,7 +33,6 @@ def parseRestrictOpArray(restrictOpTexts):
 def parseTable(targetTableDict):
         name = targetTableDict['name']
         citusType = CitusType[targetTableDict['citusType']]
-        distCol = targetTableDict['distCol']
         maxCount = targetTableDict['maxCount']
         rowCount = targetTableDict['rowCount']
         nullRate = targetTableDict['nullRate']
@@ -43,7 +42,7 @@ def parseTable(targetTableDict):
             col = parseColumn(columnDict)
             columns.append(col)
         dupCount = targetTableDict['dupCount']
-        return Table(name, citusType, distCol, maxCount, rowCount,
+        return Table(name, citusType, maxCount, rowCount,
                      nullRate, duplicateRate, columns, dupCount)
 
 def parseTableArray(targetTableDicts):

@@ -22,7 +22,7 @@ def _genTableDDL(table):
     ddl += ');\n'
     
     if isTableDistributed(table):
-        ddl += 'SELECT create_distributed_table(' + '\'' + table.name + '\',\'' + table.distCol + '\'' + ');'
+        ddl += 'SELECT create_distributed_table(' + '\'' + table.name + '\',\'' + getConfig().commonColName + '\'' + ');'
         ddl += '\n'
     elif isTableReference(table):
         ddl += 'SELECT create_reference_table(' + '\'' + table.name + '\'' + ');'
