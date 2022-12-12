@@ -43,5 +43,5 @@ def _genDupData(tableName, dupRowCount):
     '''returns string to fill table with duplicate integers which are fetched from given table'''
     dataGenerationSql = ''
     dataGenerationSql += 'INSERT INTO ' + tableName
-    dataGenerationSql += ' SELECT * FROM ' + tableName + ' LIMIT ' + str(dupRowCount) + ';'
+    dataGenerationSql += ' SELECT * FROM ' + tableName + ' ORDER BY ' + getConfig().commonColName + ' LIMIT ' + str(dupRowCount) + ';'
     return dataGenerationSql

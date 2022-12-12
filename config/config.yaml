@@ -5,6 +5,7 @@ ddlOutFile: ddls.sql
 semiAntiJoin: true
 limit: true
 orderby: true
+forceOrderbyWithLimit: true
 aggregate: false
 useAvgAtTopLevelTarget: true
 dataRange:

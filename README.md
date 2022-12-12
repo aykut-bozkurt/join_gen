@@ -66,6 +66,7 @@ queryOutFile: <string>
 semiAntiJoin: <bool>
 limit: <bool>
 orderby: <bool>
+forceOrderbyWithLimit: <bool>
 aggregate: <bool>
 useAvgAtTopLevelTarget: <bool>
 dataRange:
@@ -93,6 +94,7 @@ queryOutFile: "fileto write generated queries"
 semiAntiJoin: "should we support semin joins (WHERE col IN (Subquery))"
 limit: "should we support limit clause"
 orderby: "should we support order by clause"
+forceOrderbyWithLimit: "should we force order by when we use limit"
 aggregate: "should we support aggregate at targetlist"
 useAvgAtTopLevelTarget: "should we make top level query as select avg() from (subquery)"
 dataRange:

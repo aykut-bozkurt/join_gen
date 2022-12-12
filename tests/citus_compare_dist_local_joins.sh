@@ -43,10 +43,10 @@ runQueries()
     rm -rf "${out_folder}"/dist_queries.out "${out_folder}"/local_queries.out
 
     # run ddls for local and distributed tables sequentially
-    psql -p "${psql_port}" -f "${out_folder}"/local_ddls.sql > /dev/null
     psql -p "${psql_port}" -f "${out_folder}"/dist_ddls.sql > /dev/null
+    psql -p "${psql_port}" -f "${out_folder}"/local_ddls.sql > /dev/null
 
-    # run queries from 2 parallel session
+    # run dmls for local and distributed tables sequentially
     psql -p "${psql_port}" -f "${out_folder}"/dist_queries.sql > "${out_folder}"/dist_queries.out 2>&1
     psql -p "${psql_port}" -f "${out_folder}"/local_queries.sql > "${out_folder}"/local_queries.out 2>&1
 }

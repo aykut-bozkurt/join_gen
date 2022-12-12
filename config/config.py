@@ -21,6 +21,7 @@ class Config:
         self.semiAntiJoin = configObj['semiAntiJoin']
         self.limit = configObj['limit']
         self.orderby = configObj['orderby']
+        self.forceOrderbyWithLimit = configObj['forceOrderbyWithLimit']
         self.aggregate = configObj['aggregate']
         self.useAvgAtTopLevelTarget = configObj['useAvgAtTopLevelTarget']
         self.interactiveMode = configObj['interactiveMode']

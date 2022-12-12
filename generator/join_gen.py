@@ -180,9 +180,13 @@ def _genQuery(genCtx):
     else:
         query += _genSelectExpr(genCtx)
         query += _genFromExpr(genCtx)
+        choseOrderby = False
         if getConfig().orderby and shouldSelectThatBranch():
             query += _genOrderBy(genCtx)
+            choseOrderby = True
         if getConfig().limit and shouldSelectThatBranch():
+            if not choseOrderby and getConfig().forceOrderbyWithLimit:
+                query += _genOrderBy(genCtx)
             query += _genLimit(genCtx)
     return query
 
