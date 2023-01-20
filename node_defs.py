@@ -25,13 +25,15 @@ class CitusType(Enum):
 
 class Table:
     def __init__(self, name, citusType, maxCount, 
-                 rowCount, nullRate, duplicateRate, columns, dupCount):
+                 rowCount, nullRate, duplicateRate, 
+                 useRandom, columns, dupCount):
         self.name = name
         self.citusType = citusType
         self.maxCount = maxCount
-        self.rowCount =  rowCount
-        self.nullRate =  nullRate
-        self.duplicateRate =  duplicateRate
+        self.rowCount = rowCount
+        self.nullRate = nullRate
+        self.duplicateRate = duplicateRate
+        self.useRandom = useRandom
         self.columns = columns
         self.dupCount = dupCount
 

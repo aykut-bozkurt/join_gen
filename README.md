@@ -24,6 +24,7 @@ targetTables: <Table[]>
       rowCount: <int>
       nullRate: <float>
       duplicateRate: <float>
+      useRandom: <bool>
       columns: <Column[]>
         - Column: 
           name: <string>
@@ -43,6 +44,7 @@ targetTables: "array of tables that will be used in generated queries"
       rowCount: "total # of rows that will be inserted into table"
       nullRate: "percentage of null rows in rowCount that will be inserted into table"
       duplicateRate: "percentage of duplicates in rowCount that will be inserted into table"
+      useRandom: "should we generate random rows"
       columns: "array of columns in table"
         - Column: 
           name: "name of column"
@@ -178,3 +180,47 @@ targetRteTypes:
 
 ### Aggregation Support
 Tool supports any aggregate functions which takes int column as input and returns int result. e.g. max, min, count
+
+## How to Generate Queries?
+You have 2 different options.
+
+- [Interactive Mode](#interactive-mode)
+- [File Mode](#file-mode)
+
+### Interactive Mode
+In this mode, you will be prompted to continue generating a query. When you hit to `Enter`, it will continue generating them.
+You will need to hit to `x` to exit.
+
+1. Configure `interactiveMode: true` in config.yml,
+2. Run the command shown below
+```bash
+python main.py
+```
+
+### File Mode
+In this mode, generated ddls and queries will be written into configured files.
+
+1. Configure `interactiveMode: false`,
+2. Configure `queryCount: <total_query>`,
+3. Configure `queryOutFile: <query_file_path>` and `ddlOutFile: <ddlfile_path>`
+4. Run the command shown below
+```bash
+python main.py
+```
+
+## How to Run Citus Join Verification?
+You can verify if Citus breaks any default PG join behaviour via `tests/citus_compare_dist_local_joins.sh`. It creates
+tables specified in config. Then, it runs generated queries on those tables and saves the results into `out/dist_queries.out`.
+After running those queries for Citus tables, it creates PG tables with the same names as previous run, executes the same 
+queries, and saves the results into `out/local_queries.out`. In final step, it generates diff between local and distributed results.
+You can see the contents of `out/local_dist_diffs` to see if there is any Citus unsupported query.
+
+1. Create a Citus local cluster with 2 workers by using [citus_dev](https://github.com/citusdata/tools/tree/develop/citus_dev) tool
+```bash
+citus_dev make testCluster --destroy
+```
+2. Run the test,
+```bash
+bash tests/citus_compare_dist_local_joins.sh 9700
+```
+3. See the diff content in `out/local_dist_diffs`
